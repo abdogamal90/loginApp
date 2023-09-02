@@ -1,24 +1,32 @@
 class Users::RegistrationsController < Devise::RegistrationsController
+  respond_to :json
 
-    respond_to :json
-
-    private
-
-    def respond_with(resource, _opts = {})
-        register_success && return if resource.persisted?
-
-        register_failed
-    end
-
-    def register_success
-        render json: { message: 'Signed up sucessfully.' }
-    end
-
-    def register_failed
-
-        render json: { message: "Something went wrong." }
-    end
-
+  private
     
-  
+  def respond_with(resource, _opts = {})
+    if resource.persisted?
+      register_success
+    else
+      register_failed(resource)
+    end
+  end
+
+  def register_success
+    
+    # on success send the token along with the user object
+    render json: {
+        message: 'Signed up successfully.',
+        user: resource,
+    }
+
+
+  end
+
+  def register_failed(resource)
+    if resource.errors[:email].include?('has already been taken')
+      render json: { message: 'Email address is already in use.' }, status: :unprocessable_entity
+    else
+      render json: { message: 'Something went wrong.' }, status: :unprocessable_entity
+    end
+  end
 end
