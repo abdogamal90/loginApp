@@ -2,7 +2,7 @@ class Users::RegistrationsController < Devise::RegistrationsController
   respond_to :json
 
   private
-    
+
   def respond_with(resource, _opts = {})
     if resource.persisted?
       register_success
@@ -17,8 +17,8 @@ class Users::RegistrationsController < Devise::RegistrationsController
     render json: {
         message: 'Signed up successfully.',
         user: resource,
+        confirm_success: 'A message with a confirmation link has been sent to your email address. Please follow the link to activate your account.'
     }
-
 
   end
 

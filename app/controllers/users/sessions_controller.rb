@@ -18,14 +18,22 @@ class Users::SessionsController < Devise::SessionsController
         render json: {
             message: "Signed in successfully.",
             user: resource,
-            token: token
         }
     end
 
     def handle_failed_sign_in(resource)
-        render json: {
-            message: "Invalid login credentials. Please try again."
-        }, status: :unauthorized
+        
+        if resource.errors[:email].include?('You have to confirm your email address before continuing.')
+            render json: { message: 'You have to confirm your email address before continuing.' }, status: :unauthorized
+        elsif resource.errors[:password].include?('Invalid password.')
+            render json: { message: 'Invalid password.' }, status: :unauthorized
+        elsif resource.errors[:email].include?('Invalid email address.')
+            render json: { message: 'Invalid email address.' }, status: :unauthorized
+        elsif !resource.confirmed?
+            render json: { message: 'You have to confirm your email address before continuing.' }, status: :unauthorized
+        else
+            render json: { message: 'Something went wrong.', errors: resource.errors }, status: :unprocessable_entity
+        end
     end
 
 
