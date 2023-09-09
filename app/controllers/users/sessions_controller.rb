@@ -1,11 +1,12 @@
 class Users::SessionsController < Devise::SessionsController
+  before_action :authenticate_user!
   respond_to :json
 
   private
     
   def respond_with(resource, opts = {})
   
-    if current_user
+    if current_user 
         handle_successful_sign_in(resource)
     else
         handle_failed_sign_in(resource)
@@ -13,26 +14,30 @@ class Users::SessionsController < Devise::SessionsController
   end
 
     def handle_successful_sign_in(resource)
-        token = JWT.encode({ sub: resource.id }, Rails.application.credentials.devise[:jwt_secret_key], 'HS256')
-
+      @token = JWT.encode({ sub: resource.id, exp: 24.hours.from_now.to_i }, Rails.application.credentials.devise[:jwt_secret_key])
         render json: {
-            message: "Signed in successfully.",
+            message: I18n.t('devise.sessions.signed_in'),
             user: resource,
+            token: @token
+
         }
     end
+
+
+
 
     def handle_failed_sign_in(resource)
         
         if resource.errors[:email].include?('You have to confirm your email address before continuing.')
-            render json: { message: 'You have to confirm your email address before continuing.' }, status: :unauthorized
+            render json: { message: I18n.t('devise.failure.unconfirmed')}, status: :unauthorized
         elsif resource.errors[:password].include?('Invalid password.')
-            render json: { message: 'Invalid password.' }, status: :unauthorized
+            render json: { message: I18n.t('devise.passwords.wrong_password') }, status: :unauthorized
         elsif resource.errors[:email].include?('Invalid email address.')
-            render json: { message: 'Invalid email address.' }, status: :unauthorized
+            render json: { message: I18n.t('devise.failure.wrong_email') }, status: :unauthorized
         elsif !resource.confirmed?
-            render json: { message: 'You have to confirm your email address before continuing.' }, status: :unauthorized
+            render json: { message: I18n.t('devise.failure.unconfirmed')}, status: :unauthorized
         else
-            render json: { message: 'Something went wrong.', errors: resource.errors }, status: :unprocessable_entity
+            render json: { message: I18n.t('devise.failure.general_error'), errors: resource.errors }, status: :unprocessable_entity
         end
     end
 

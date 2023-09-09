@@ -5,6 +5,8 @@ Rails.application.routes.draw do
     registrations: 'users/registrations',
     confirmations: 'users/confirmations'
   }
+  post 'validate_token', to: 'tokens#validate'
 
-  get '/member-data', to: 'members#show'
+  
+
 end
